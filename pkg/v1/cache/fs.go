@@ -43,15 +43,20 @@ type layer struct {
 	digest, diffID v1.Hash
 }
 
-func (l *layer) create(h v1.Hash) (io.WriteCloser, error) {
+func (l *layer) create() (io.WriteCloser, error) {
 	if err := os.MkdirAll(l.path, 0700); err != nil {
 		return nil, err
 	}
-	return os.Create(cachepath(l.path, h))
+	filename := cachepath(l.path, l.digest)
+	if err := os.Symlink(filename, cachepath(l.path, l.diffID)); err != nil && !os.IsExist(err) {
+		return nil, err
+	}
+
+	return os.Create(filename)
 }
 
 func (l *layer) Compressed() (io.ReadCloser, error) {
-	f, err := l.create(l.digest)
+	f, err := l.create()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +71,7 @@ func (l *layer) Compressed() (io.ReadCloser, error) {
 }
 
 func (l *layer) Uncompressed() (io.ReadCloser, error) {
-	f, err := l.create(l.diffID)
+	f, err := l.create()
 	if err != nil {
 		return nil, err
 	}

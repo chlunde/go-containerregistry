@@ -48,7 +48,7 @@ func TestFilesystemCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadDir: %v", err)
 	}
-	if got, want := len(files), numLayers; got != want {
+	if got, want := len(files), numLayers*2; got != want {
 		t.Errorf("Got %d cached files, want %d", got, want)
 	}
 	for _, fi := range files {

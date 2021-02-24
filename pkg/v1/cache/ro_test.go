@@ -8,7 +8,7 @@ import (
 )
 
 func TestReadOnly(t *testing.T) {
-	m := &memcache{map[v1.Hash]v1.Layer{}}
+	m := &memcache{map[v1.Hash]v1.Layer{}, map[v1.Hash]v1.Layer{}}
 	ro := ReadOnly(m)
 
 	// Populate the cache.
@@ -28,7 +28,7 @@ func TestReadOnly(t *testing.T) {
 	if err != nil {
 		t.Fatalf("layer.Digest: %v", err)
 	}
-	m.m[h] = ls[0]
+	m.byDigest[h] = ls[0]
 
 	// Layer can be read from original cache and RO cache.
 	if _, err := m.Get(h); err != nil {
@@ -37,13 +37,13 @@ func TestReadOnly(t *testing.T) {
 	if _, err := ro.Get(h); err != nil {
 		t.Fatalf("ro.Get: %v", err)
 	}
-	ln := len(m.m)
+	ln := len(m.byDigest)
 
 	// RO Put is a no-op.
 	if _, err := ro.Put(ls[0]); err != nil {
 		t.Fatalf("ro.Put: %v", err)
 	}
-	if got, want := len(m.m), ln; got != want {
+	if got, want := len(m.byDigest), ln; got != want {
 		t.Errorf("After Put, got %v entries, want %v", got, want)
 	}
 
@@ -51,7 +51,7 @@ func TestReadOnly(t *testing.T) {
 	if err := ro.Delete(h); err != nil {
 		t.Fatalf("ro.Delete: %v", err)
 	}
-	if got, want := len(m.m), ln; got != want {
+	if got, want := len(m.byDigest), ln; got != want {
 		t.Errorf("After Delete, got %v entries, want %v", got, want)
 	}
 
@@ -59,7 +59,7 @@ func TestReadOnly(t *testing.T) {
 	if err := m.Delete(h); err != nil {
 		t.Fatalf("m.Delete: %v", err)
 	}
-	if got, want := len(m.m), 0; got != want {
+	if got, want := len(m.byDigest), 0; got != want {
 		t.Errorf("After RW Delete, got %v entries, want %v", got, want)
 	}
 }
